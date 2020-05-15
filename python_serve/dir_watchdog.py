@@ -6,11 +6,14 @@ import pika
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+path = sys.argv[1] if len(sys.argv) > 1 else '.'
+url = sys.argv[2] if len(sys.argv) > 2 else '127.0.0.1'
+
 
 def initiate_broker_connection():
 
     credentials = pika.PlainCredentials('user', 'user')
-    parameters = pika.ConnectionParameters('127.0.0.1', 5672, '/', credentials)
+    parameters = pika.ConnectionParameters(url, 5672, '/', credentials)
     connection = pika.BlockingConnection(parameters)
     #
     # connection = pika.BlockingConnection(
@@ -61,7 +64,6 @@ def validate_path(path):
 
 
 if __name__ == "__main__":
-    path = sys.argv[1] if len(sys.argv) > 1 else '.'
     if validate_path(path) is False:
         connection.close()
         exit(0)

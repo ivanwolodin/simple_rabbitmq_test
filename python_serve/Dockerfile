@@ -12,10 +12,10 @@ COPY .                  /$to_working_dir
 
 RUN apt-get update   && apt-get install nano
 RUN apt-get update   && apt-get install net-tools
-# RUN apt-get update   && apt-get -y install libpython3.7-dev
+#RUN apt-get update   && apt-get -y install libpython3.7-dev
 
 RUN python -m pip install pika --upgrade
 RUN python -m pip install watchdog
 
-#CMD tail -f /dev/null # to prevent exiting
+CMD tail -f /dev/null # to prevent exiting
 #ENTRYPOINT ["ping", "www.google.com"]
