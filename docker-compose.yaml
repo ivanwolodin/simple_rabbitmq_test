@@ -6,18 +6,17 @@ services:
         ports:
             - 5672:5672
             - 15672:15672
-        #networks:
-        #    - back
         tty: true
     
     python_server:
         build: ./python_serve
-        links:
-            - "rabbitmq_1"
-        #ports:
-        #    - "3306"
-        #networks:
-        #    - back
 
-#networks:
-#    back:
+
+networks:
+    default:
+
+    # now both services are binded through network
+    # being inside of python_server container we can ping rabbitmq_1
+    # by running ping rabbitmq_1
+    # and running python send.py we eventually send data to 
+    # rabbitmq_1 container

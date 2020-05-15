@@ -1,7 +1,5 @@
-#FROM python:3.7
 FROM rabbitmq
 
-# Define environment variables.
 ENV RABBITMQ_USER user
 ENV RABBITMQ_PASSWORD user
 
