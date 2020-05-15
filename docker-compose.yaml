@@ -1,0 +1,23 @@
+version: "3"
+
+services:
+    rabbitmq_1:
+        build: ./rabbit_mq
+        ports:
+            - 5672:5672
+            - 15672:15672
+        #networks:
+        #    - back
+        tty: true
+    
+    python_server:
+        build: ./python_serve
+        links:
+            - "rabbitmq_1"
+        #ports:
+        #    - "3306"
+        #networks:
+        #    - back
+
+#networks:
+#    back:
