@@ -13,4 +13,4 @@
     * RabbitMQ
 
 При помощи Докера проект разворачивается на одном компьютере по схеме приведенной на рисунке.
-![Scheme](python_serve/application pattern.png)
+![application pattern](python_serve/application pattern.png)
