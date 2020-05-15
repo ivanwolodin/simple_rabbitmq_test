@@ -15,7 +15,7 @@
 
 
 При помощи Докера проект разворачивается на одном компьютере по схеме приведенной на рисунке.
-![application pattern](python_serve/application pattern.png)
+![application_pattern](python_serve/application_pattern.png)
 
 После запуска docker-compose up -d (в папке с файлом .yaml)
 разворачивается два контейнера, находящиеся в одной сети. 
