@@ -6,8 +6,12 @@ import pika
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-path = sys.argv[1] if len(sys.argv) > 1 else '.'
-url = sys.argv[2] if len(sys.argv) > 2 else '127.0.0.1'
+try:
+    path = sys.argv[1] if len(sys.argv) > 1 else '.'
+    url = sys.argv[2] if len(sys.argv) > 2 else 'rabbitmq_1'
+except:
+    path = '.'
+    url = 'rabbitmq_1'
 
 
 def initiate_broker_connection():
