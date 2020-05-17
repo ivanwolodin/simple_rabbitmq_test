@@ -1,5 +1,6 @@
 import datetime
 import sys
+# import time
 
 import pika
 from PyQt5 import uic
@@ -66,6 +67,12 @@ class MyWindow(QMainWindow):
         self.binder.image_signal.connect(self.image_callback)
         self.binder.moveToThread(self.thread)
         self.thread.started.connect(self.binder.bind_to_rabbit)
+
+    def closeEvent(self, event):
+        # TODO: gracefully stop application
+        print('exiting')
+        # need to stop thread here
+        # time.sleep(15)
 
     def start_listening(self) -> None:
         self.thread.start()
