@@ -44,7 +44,7 @@ class BindRabbitMQ(QObject):
         print(" [x] Received %r" % body)
         BindRabbitMQ.textEdit.append(datetime.datetime.now().strftime("%d-%m-%Y %H:%M:%S"))
         BindRabbitMQ.textEdit.append(body.decode("utf-8"))
-        BindRabbitMQ.textEdit.append('*************************************')
+        BindRabbitMQ.textEdit.append('***********')
 
 
 class MyWindow(QMainWindow):
@@ -69,6 +69,7 @@ class MyWindow(QMainWindow):
 
     def start_listening(self) -> None:
         self.thread.start()
+
         self.textEdit_2.setText('Listening to {}'.format(url))
         # channel.basic_qos(prefetch_count=2)
 

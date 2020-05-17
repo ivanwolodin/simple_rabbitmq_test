@@ -15,13 +15,14 @@ except:
 
 
 class RabbitSender():
-    def __init__(self, user='user', password='user', url='rabbitmq_1', port=5672):
+    def __init__(self, user='user', password='user', url='rabbitmq_1', port=5672, queue='Hello'):
         self.chanel = None
         self.connection = None
         self.user = user
         self.password = password
         self.url = url
         self.port = port
+        self.queue = queue
 
     def initiate_broker_connection(self):
         credentials = pika.PlainCredentials(self.user,
@@ -37,7 +38,8 @@ class RabbitSender():
         #     pika.ConnectionParameters(host='localhost'))
 
         self.chanel = self.connection.channel()
-        self.chanel.queue_declare(queue='hello')
+        self.chanel.queue_declare(queue=self.queue)
+
         return self.chanel, self.connection
 
     def close_connection(self):
@@ -84,8 +86,10 @@ if __name__ == "__main__":
     if validate_path(PATH) is False:
         # connection.close()
         exit(0)
+
     rabbit_sender_obj = RabbitSender()
     rabbit_sender_obj.initiate_broker_connection()
+
     event_handler = MyHandler(path=PATH,
                               channel=rabbit_sender_obj.chanel)
 
