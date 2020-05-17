@@ -7,38 +7,51 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
 try:
-    path = sys.argv[1] if len(sys.argv) > 1 else '.'
-    url = sys.argv[2] if len(sys.argv) > 2 else 'rabbitmq_1'
+    PATH = sys.argv[1] if len(sys.argv) > 1 else '.'
+    URL = sys.argv[2] if len(sys.argv) > 2 else 'rabbitmq_1'
 except:
-    path = '.'
-    url = 'rabbitmq_1'
+    PATH = '.'
+    URL = 'rabbitmq_1'
 
 
-def initiate_broker_connection():
+class RabbitSender():
+    def __init__(self, user='user', password='user', url='rabbitmq_1', port=5672):
+        self.chanel = None
+        self.connection = None
+        self.user = user
+        self.password = password
+        self.url = url
+        self.port = port
 
-    credentials = pika.PlainCredentials('user', 'user')
-    parameters = pika.ConnectionParameters(url, 5672, '/', credentials)
-    connection = pika.BlockingConnection(parameters)
-    #
-    # connection = pika.BlockingConnection(
-    #     pika.ConnectionParameters(host='localhost'))
+    def initiate_broker_connection(self):
+        credentials = pika.PlainCredentials(self.user,
+                                            self.password)
+        parameters = pika.ConnectionParameters(self.url,
+                                               self.port,
+                                               '/',
+                                               credentials)
 
-    channel = connection.channel()
+        self.connection = pika.BlockingConnection(parameters)
+        #
+        # connection = pika.BlockingConnection(
+        #     pika.ConnectionParameters(host='localhost'))
 
-    return channel, connection
+        self.chanel = self.connection.channel()
+        self.chanel.queue_declare(queue='hello')
+        return self.chanel, self.connection
 
-
-channel, connection = initiate_broker_connection()
-channel.queue_declare(queue='hello')
+    def close_connection(self):
+        self.connection.close()
 
 
 class MyHandler(FileSystemEventHandler):
-    def __init__(self, path):
+    def __init__(self, path, channel):
         self.cur_path = path
+        self.channel = channel
 
     def on_any_event(self, event):
         dirs = os.listdir(self.cur_path)
-        channel.basic_publish(exchange='', routing_key='hello', body=', '.join(dirs))
+        self.channel.basic_publish(exchange='', routing_key='hello', body=', '.join(dirs))
         print(" [x] Sent {} ".format(', '.join(dirs)))
 
     # Для оптимизации можно реализовать эти методы
@@ -68,14 +81,17 @@ def validate_path(path):
 
 
 if __name__ == "__main__":
-    if validate_path(path) is False:
-        connection.close()
+    if validate_path(PATH) is False:
+        # connection.close()
         exit(0)
+    rabbit_sender_obj = RabbitSender()
+    rabbit_sender_obj.initiate_broker_connection()
+    event_handler = MyHandler(path=PATH,
+                              channel=rabbit_sender_obj.chanel)
 
-    event_handler = MyHandler(path)
     observer = Observer()
 
-    observer.schedule(event_handler, path, recursive=True)
+    observer.schedule(event_handler, PATH, recursive=True)
 
     observer.start()
 
@@ -84,5 +100,5 @@ if __name__ == "__main__":
             time.sleep(1)
     except KeyboardInterrupt:
         observer.stop()
-        connection.close()
+        rabbit_sender_obj.close_connection()
     observer.join()
