@@ -1,47 +1,82 @@
-Проект, состоящий из двух приложений: - клиент и сервер. Суть решения - удаленный монитор содержимого каталога.
+# Remote Directory Monitor
 
-Сервер получает путь к каталогу через аргументы командной строки. 
-Клиенту получает адрес сервера.
-Сервер следит за изменениями в заданном каталоге, и, если содержимое изменилось, оно должно быстро обновиться на клиенте.
+A client-server application for remotely monitoring the contents of a directory.
 
-Решение с использованием amqp.
+The server monitors a specified directory and sends notifications whenever its contents change. The client receives these notifications and displays updates almost immediately.
 
--------------------------------------------------------------------------------------------------------------------------
+Communication between the client and server is implemented using **AMQP** and **RabbitMQ**.
 
-Решение использует:
+## Technology Stack
 
-    * python 3.7
-    * RabbitMQ
-    * библиотеку PyQt 5.14 (для gui)
-    * pika 1.1.0 (для соединения с RabbitMQ)
+- Python 3.7
+- RabbitMQ
+- PyQt 5.14 — graphical user interface
+- Pika 1.1.0 — RabbitMQ client library
+- Docker and Docker Compose
 
+## Architecture
 
-При помощи Докера проект разворачивается на одном компьютере по схеме приведенной на рисунке.
+The project consists of two main components:
 
+- **Server** — monitors a specified directory and sends change notifications to RabbitMQ.
+- **Client** — connects to RabbitMQ, receives notifications, and displays them in a graphical interface.
 
-![application_pattern](python_serve/application_pattern.png)
+The application uses Docker Compose to deploy the server-side components on a single host.
 
+![Application Architecture](python_serve/application_pattern.png)
 
-После запуска ***docker-compose up -d*** (в папке с файлом .yaml)
-разворачивается два контейнера, находящиеся в одной сети. 
+## Getting Started
 
-Первый сервис разворачивает **RabbitMQ**, создает пользователя user с паролем user через shell-скрипт.
-Второй сервис *python_serve* скачивает нужные библиотеки, в нем нужно запустить скрипт *watchdog.py* 
-в фоновом режиме ***python async_rabbitmq_sender.py  path_to_follow url & ***
+### 1. Start the Docker Containers
 
-Исходя из настроек в .yaml , *url=rabbitmq_1* (можно сделать это автоматически, изменив настройки в .yaml).
+Run the following command in the directory containing `docker-compose.yaml`:
 
-На компьютере хосте нужно развернуть приложение ***python gui_listener.py url*** 
-По-умолчанию, при разворачивании приложения с докерами *url=127.0.0.1*
-GUI приложение многопоточное. В отдельном потоке обрабатываются принятия сообщений от RabbitMQ.
+```bash
+docker-compose up -d
+```
 
-Внешний вид графического приложения gui_listener
+Two containers will be started in the same Docker network:
 
+- **rabbit_mq** — starts RabbitMQ and creates a user named `user` with the password `user` using an initialization script.
+- **python_serve** — provides the Python environment required to run the directory monitoring service.
 
-![gui](python_serve/gui.png)
+### 2. Start the Server
 
+Run the monitoring script inside the `python_serve` container:
 
-После этого нужно в контейнере сервиса python_serve переместиться в директорию, указанную в *path_to_follow* и начать менять структуру директории.
+```bash
+python async_rabbitmq_sender.py path_to_follow rabbitmq_1 &
+```
 
-Теперь при любом изменении *path_to_follow* скрипт *async_rabbitmq_sender.py* будет отправлять сообщения в очередь rabbit_mq, 
-а компьютер-хост контейнеров при помощи *gui_listener.py* будет их немедленно получать
+Replace `path_to_follow` with the directory you want to monitor.
+
+The default RabbitMQ hostname inside the Docker network is `rabbitmq_1`.
+
+### 3. Start the Client
+
+On the host machine, run:
+
+```bash
+python gui_listener.py 127.0.0.1
+```
+
+The client connects to RabbitMQ through the host address `127.0.0.1`.
+
+The GUI application uses multiple threads. A separate thread handles incoming messages from RabbitMQ.
+
+## GUI
+
+The client provides a graphical interface for displaying directory change notifications.
+
+![GUI](python_serve/gui.png)
+
+## How It Works
+
+1. The server starts monitoring the specified directory.
+2. When a file or directory is created, modified, or deleted, the server detects the change.
+3. The server sends a notification to a RabbitMQ queue.
+4. The client receives the notification and updates its interface.
+
+To test the application, navigate to the monitored directory inside the `python_serve` container and modify its contents.
+
+The client running on the host machine should receive the corresponding notifications almost immediately.
